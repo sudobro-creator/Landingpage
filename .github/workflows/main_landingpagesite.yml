@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy Node.js app to Azure Web App - Landingpagesite
+name: Build and deploy PHP app to Azure Web App - Landingpagesite
 
 on:
   push:
@@ -18,21 +18,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js version
-        uses: actions/setup-node@v3
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
         with:
-          node-version: '24.x'
+          php-version: '8.5'
 
-      - name: npm install, build, and test
-        run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
+      - name: Check if composer.json exists
+        id: check_files
+        uses: andstor/file-existence-action@v1
+        with:
+          files: 'composer.json'
+
+      - name: Run composer install if composer.json exists
+        if: steps.check_files.outputs.files_exists == 'true'
+        run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
+
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: node-app
+          name: php-app
           path: .
 
   deploy:
@@ -46,18 +51,18 @@ jobs:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: node-app
+          name: php-app
       
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_BE6FCC50410447398B4EE76CC33379F9 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_56A0B9581B1F48878C870F68873B64A9 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CDC0604B7BD24DA4AD01156C31E3ABC8 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_F350A591FDB14FA9A6EDC1BA528BCED9 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_7904647584664BE3ABDBCDE0174A1653 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9A4D34EADA894833B526844E4D5E32F6 }}
 
       - name: 'Deploy to Azure Web App'
-        id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
+        id: deploy-to-webapp
         with:
           app-name: 'Landingpagesite'
           slot-name: 'Production'
